@@ -9,8 +9,11 @@ import {
   IconButton,
   Checkbox,
   Typography,
+  Skeleton,
+  ThemeProvider
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
+import {CssBaseline} from "@mui/material";
 import {
   getTasks,
   addTask,
@@ -18,12 +21,14 @@ import {
   updateTask,
   toggleTaskCompletion,
 } from "./api";
+import theme from "./theme";
 
 const App = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [editingTask, setEditingTask] = useState(null);
   const [editedTitle, setEditedTitle] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Fetch tasks on load
   useEffect(() => {
@@ -36,6 +41,8 @@ const App = () => {
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,8 +96,11 @@ const App = () => {
   };
 
   return (
+    <ThemeProvider theme={theme}>
+    <CssBaseline />
     <Container maxWidth="sm" style={{ marginTop: "40px" }}>
-      <Typography variant="h4" sx={{my:2, fontStyle: 'bold'}}>To-Do List</Typography>
+      <Typography variant="h4" sx={{my:1}}>To-Do List</Typography>
+      <Typography variant="p" sx={{my:2}}>Kindly wait for tasks to load from Backend.</Typography>
 
       <TextField
         label="New Task"
@@ -111,7 +121,17 @@ const App = () => {
       </Button>
 
       <List sx={{border: 1, borderColor: 'gray', p:2, my:2}}>
-        {tasks.map((task) => (
+        {loading
+          ? [...Array(5)].map((_, index) => (
+              <ListItem key={index} divider>
+                <Skeleton variant="circular" width={24} height={24} />
+                <Skeleton variant="text" width="60%" height={30} sx={{ ml: 2 }} />
+                <Skeleton variant="circular" width={24} height={24} sx={{ ml: "auto" }} />
+                <Skeleton variant="circular" width={24} height={24} sx={{ ml: 1 }} />
+              </ListItem>
+            ))
+        
+        :tasks.map((task) => (
           <ListItem key={task.id} divider>
             <Checkbox
               checked={task.completed}
@@ -134,19 +154,19 @@ const App = () => {
             )}
 
             <IconButton
-              color="primary"
               onClick={() => (editingTask === task.id ? handleUpdateTask(task.id) : startEditing(task))}
             >
               <Edit />
             </IconButton>
 
-            <IconButton color="secondary" onClick={() => handleDeleteTask(task.id)}>
+            <IconButton onClick={() => handleDeleteTask(task.id)}>
               <Delete />
             </IconButton>
           </ListItem>
         ))}
       </List>
     </Container>
+    </ThemeProvider>
   );
 };
 
